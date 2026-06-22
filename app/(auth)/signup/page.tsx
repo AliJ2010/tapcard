@@ -57,7 +57,7 @@ export default function SignupPage() {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
-                placeholder="Ali Jebai"
+                placeholder="Jane Smith"
               />
             </div>
             <div>
