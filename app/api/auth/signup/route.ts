@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     data: {
       email,
       password: hashed,
-      profile: {
-        create: { slug, fullName, email },
+      profiles: {
+        create: { slug, fullName, email, cardName: "My Card" },
       },
     },
   });

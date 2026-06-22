@@ -14,13 +14,11 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        const user = await prisma.user.findUnique({ where: { email: credentials.email } });
         if (!user) return null;
         const valid = await bcrypt.compare(credentials.password, user.password);
         if (!valid) return null;
-        return { id: user.id, email: user.email, isAdmin: user.isAdmin };
+        return { id: user.id, email: user.email, isAdmin: user.isAdmin, plan: user.plan };
       },
     }),
   ],
@@ -29,6 +27,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.isAdmin = (user as any).isAdmin;
+        token.plan = (user as any).plan;
       }
       return token;
     },
@@ -36,11 +35,10 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).isAdmin = token.isAdmin;
+        (session.user as any).plan = token.plan;
       }
       return session;
     },
   },
-  pages: {
-    signIn: "/login",
-  },
+  pages: { signIn: "/login" },
 };

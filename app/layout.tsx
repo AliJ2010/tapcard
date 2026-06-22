@@ -6,7 +6,7 @@ import { Providers } from "@/components/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TapCard — Digital Business Cards",
+  title: "RelayCrd — Digital Business Cards",
   description: "Share your professional profile with a tap",
 };
 

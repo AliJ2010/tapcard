@@ -7,19 +7,24 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  isAdmin   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  profile   Profile?
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String
+  isAdmin         Boolean  @default(false)
+  emailVerified   Boolean  @default(false)
+  verifyToken     String?
+  plan            String   @default("free")
+  createdAt       DateTime @default(now())
+  profiles        Profile[]
 }
 
 model Profile {
   id          String   @id @default(cuid())
   slug        String   @unique
-  userId      String   @unique
+  userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isDefault   Boolean  @default(true)
+  cardName    String   @default("My Card")
 
   fullName    String
   jobTitle    String?
@@ -36,12 +41,12 @@ model Profile {
   twitter     String?
   whatsapp    String?
 
-  theme       String   @default("default")
+  theme       String   @default("dark")
   isPublic    Boolean  @default(true)
-
-  views       Int      @default(0)
+  sectionOrder String  @default("contact,social,links")
 
   customLinks CustomLink[]
+  taps        Tap[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -55,4 +60,12 @@ model CustomLink {
   url       String
   icon      String  @default("link")
   order     Int     @default(0)
+}
+
+model Tap {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  device    String?
+  createdAt DateTime @default(now())
 }

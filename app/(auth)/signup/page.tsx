@@ -38,7 +38,7 @@ export default function SignupPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 text-2xl font-bold text-white mb-2">
             <Nfc className="text-purple-400" size={28} />
-            TapCard
+            RelayCrd
           </div>
           <p className="text-slate-400">Create your digital card</p>
         </div>

@@ -14,7 +14,7 @@ const steps = [
   },
   {
     title: "Copy Your Profile URL",
-    desc: "Go to your TapCard dashboard and copy your unique profile URL. It looks like: tapcard.app/your-name",
+    desc: "Go to your RelayCrd dashboard and copy your unique profile URL. It looks like: relaycrd.app/your-name",
   },
   {
     title: "Write the URL to Your Tag",
