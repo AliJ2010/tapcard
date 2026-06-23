@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { Nfc, Loader2, Plus, Trash2, ArrowLeft, Check, GripVertical } from "lucide-react";
+import { Nfc, Loader2, Plus, Trash2, ArrowLeft, Check, GripVertical, Image } from "lucide-react";
 import { UploadButton } from "@uploadthing/react";
 import type { OurFileRouter } from "@/lib/uploadthing";
 import {
@@ -16,39 +16,28 @@ import { CSS } from "@dnd-kit/utilities";
 
 type CustomLink = { label: string; url: string; icon: string };
 type Profile = {
-  id: string;
-  slug: string;
-  fullName: string;
-  jobTitle: string;
-  company: string;
-  bio: string;
-  phone: string;
-  email: string;
-  website: string;
-  linkedin: string;
-  instagram: string;
-  twitter: string;
-  whatsapp: string;
-  photoUrl: string;
-  isPublic: boolean;
-  theme: string;
-  cardName: string;
-  sectionOrder: string;
+  id: string; slug: string; fullName: string; jobTitle: string; company: string; bio: string;
+  phone: string; email: string; website: string; linkedin: string; instagram: string;
+  twitter: string; whatsapp: string; photoUrl: string; bannerUrl: string;
+  isPublic: boolean; theme: string; cardName: string; sectionOrder: string;
+  accentColor: string; bgColor: string; gradientFrom: string; gradientTo: string;
   customLinks: CustomLink[];
 };
 
 const EMPTY: Profile = {
   id: "", slug: "", fullName: "", jobTitle: "", company: "", bio: "",
   phone: "", email: "", website: "", linkedin: "", instagram: "", twitter: "",
-  whatsapp: "", photoUrl: "", isPublic: true, theme: "dark", cardName: "My Card",
-  sectionOrder: "contact,social,links", customLinks: [],
+  whatsapp: "", photoUrl: "", bannerUrl: "", isPublic: true, theme: "dark", cardName: "My Card",
+  sectionOrder: "contact,social,links", accentColor: "", bgColor: "", gradientFrom: "#7c3aed", gradientTo: "#db2777",
+  customLinks: [],
 };
 
-const THEMES = [
-  { id: "dark", label: "Dark", colors: "from-slate-900 to-slate-950" },
-  { id: "light", label: "Light", colors: "from-gray-50 to-white" },
-  { id: "gradient", label: "Gradient", colors: "from-violet-950 to-fuchsia-950" },
-  { id: "minimal", label: "Minimal", colors: "from-white to-gray-50" },
+const PRESETS = [
+  { id: "dark", label: "Dark", bg: "#0f172a", accent: "#9333ea" },
+  { id: "light", label: "Light", bg: "#ffffff", accent: "#4f46e5" },
+  { id: "gradient", label: "Gradient", bg: "", accent: "#a855f7" },
+  { id: "minimal", label: "Minimal", bg: "#f9fafb", accent: "#111827" },
+  { id: "custom", label: "Custom", bg: "", accent: "" },
 ];
 
 const SECTION_LABELS: Record<string, string> = { contact: "Contact", social: "Social Links", links: "Custom Buttons" };
@@ -83,6 +72,21 @@ function SortableSection({ id }: { id: string }) {
   );
 }
 
+function ColorSwatch({ color, onClick, selected }: { color: string; onClick: () => void; selected: boolean }) {
+  return (
+    <button type="button" onClick={onClick}
+      style={{ backgroundColor: color }}
+      className={`w-8 h-8 rounded-full border-2 transition-all ${selected ? "border-white scale-110" : "border-transparent"}`}
+    />
+  );
+}
+
+const QUICK_COLORS = [
+  "#ffffff", "#111827", "#ef4444", "#f97316", "#eab308",
+  "#22c55e", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
+  "#6366f1", "#14b8a6", "#f59e0b", "#84cc16", "#e11d48",
+];
+
 export default function EditPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -106,16 +110,18 @@ export default function EditPage() {
   useEffect(() => {
     if (status === "authenticated" && id) {
       fetch("/api/profile").then(r => r.json()).then(profiles => {
-        const p = profiles.find((x: Profile) => x.id === id);
+        const p = profiles.find((x: any) => x.id === id);
         if (!p) { router.push("/dashboard"); return; }
         setForm({
           id: p.id, slug: p.slug || "", fullName: p.fullName || "",
           jobTitle: p.jobTitle || "", company: p.company || "", bio: p.bio || "",
           phone: p.phone || "", email: p.email || "", website: p.website || "",
           linkedin: p.linkedin || "", instagram: p.instagram || "", twitter: p.twitter || "",
-          whatsapp: p.whatsapp || "", photoUrl: p.photoUrl || "", isPublic: p.isPublic,
-          theme: p.theme || "dark", cardName: p.cardName || "My Card",
+          whatsapp: p.whatsapp || "", photoUrl: p.photoUrl || "", bannerUrl: p.bannerUrl || "",
+          isPublic: p.isPublic, theme: p.theme || "dark", cardName: p.cardName || "My Card",
           sectionOrder: p.sectionOrder || "contact,social,links",
+          accentColor: p.accentColor || "", bgColor: p.bgColor || "",
+          gradientFrom: p.gradientFrom || "#7c3aed", gradientTo: p.gradientTo || "#db2777",
           customLinks: p.customLinks || [],
         });
         setSections((p.sectionOrder || "contact,social,links").split(","));
@@ -150,6 +156,16 @@ export default function EditPage() {
     }
   }
 
+  function selectPreset(preset: typeof PRESETS[0]) {
+    if (preset.id === "gradient") {
+      setForm(f => ({ ...f, theme: "gradient", bgColor: "", accentColor: preset.accent }));
+    } else if (preset.id === "custom") {
+      setForm(f => ({ ...f, theme: "custom" }));
+    } else {
+      setForm(f => ({ ...f, theme: preset.id, bgColor: preset.bg, accentColor: preset.accent }));
+    }
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -164,6 +180,8 @@ export default function EditPage() {
     if (!res.ok) { setError(data.error || "Failed to save"); }
     else { setSaved(true); setTimeout(() => setSaved(false), 2000); }
   }
+
+  const isGradient = form.theme === "gradient" || form.theme === "custom";
 
   if (status === "loading") return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -193,12 +211,12 @@ export default function EditPage() {
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
             <h2 className="font-semibold text-slate-200 border-b border-slate-800 pb-3">Basic Info</h2>
             <Field label="Card Name" value={form.cardName} onChange={set("cardName") as any} placeholder="Work, Personal..." />
-            <Field label="Full Name *" value={form.fullName} onChange={set("fullName") as any} placeholder="Ali Jebai" />
+            <Field label="Full Name *" value={form.fullName} onChange={set("fullName") as any} placeholder="Jane Smith" />
             <Field label="Job Title" value={form.jobTitle} onChange={set("jobTitle") as any} placeholder="Founder & CEO" />
             <Field label="Company" value={form.company} onChange={set("company") as any} placeholder="RelayCrd" />
             <Field label="Bio" value={form.bio} onChange={set("bio") as any} type="textarea" placeholder="Short bio..." />
 
-            {/* Photo Upload */}
+            {/* Profile Photo */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">Profile Photo</label>
               {form.photoUrl && (
@@ -206,9 +224,7 @@ export default function EditPage() {
               )}
               <UploadButton<OurFileRouter, "profilePhoto">
                 endpoint="profilePhoto"
-                onClientUploadComplete={(res) => {
-                  if (res?.[0]) set("photoUrl")(res[0].ufsUrl);
-                }}
+                onClientUploadComplete={(res) => { if (res?.[0]) set("photoUrl")(res[0].ufsUrl); }}
                 onUploadError={(err) => setError(err.message)}
                 appearance={{
                   button: "bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg",
@@ -257,23 +273,133 @@ export default function EditPage() {
             ))}
           </section>
 
-          {/* Theme */}
-          <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <h2 className="font-semibold text-slate-200 border-b border-slate-800 pb-3">Theme</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {THEMES.map(theme => (
-                <button key={theme.id} type="button" onClick={() => set("theme")(theme.id)}
-                  className={`relative rounded-xl overflow-hidden h-16 bg-gradient-to-br ${theme.colors} border-2 transition-colors ${form.theme === theme.id ? "border-purple-500" : "border-transparent"}`}>
-                  <span className="absolute inset-0 flex items-end justify-center pb-2">
-                    <span className={`text-xs font-medium ${theme.id === "light" || theme.id === "minimal" ? "text-gray-800" : "text-white"}`}>{theme.label}</span>
-                  </span>
-                  {form.theme === theme.id && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                      <Check size={10} className="text-white" />
+          {/* Appearance */}
+          <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+            <h2 className="font-semibold text-slate-200 border-b border-slate-800 pb-3">Appearance</h2>
+
+            {/* Banner Image */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Banner Image</label>
+              {form.bannerUrl ? (
+                <div className="relative mb-3">
+                  <img src={form.bannerUrl} alt="Banner" className="w-full h-24 object-cover rounded-xl" />
+                  <button type="button" onClick={() => set("bannerUrl")("")}
+                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-lg px-2 py-1 text-xs">
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-24 rounded-xl bg-slate-800 border border-dashed border-slate-600 flex items-center justify-center mb-3 text-slate-500">
+                  <Image size={20} className="mr-2" /> No banner yet
+                </div>
+              )}
+              <UploadButton<OurFileRouter, "bannerImage">
+                endpoint="bannerImage"
+                onClientUploadComplete={(res) => { if (res?.[0]) set("bannerUrl")(res[0].ufsUrl); }}
+                onUploadError={(err) => setError(err.message)}
+                appearance={{
+                  button: "bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg",
+                  allowedContent: "text-slate-500 text-xs",
+                }}
+              />
+            </div>
+
+            {/* Theme Presets */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">Style</label>
+              <div className="grid grid-cols-5 gap-2">
+                {PRESETS.map(preset => (
+                  <button key={preset.id} type="button" onClick={() => selectPreset(preset)}
+                    className={`relative rounded-xl h-14 border-2 transition-all overflow-hidden ${form.theme === preset.id ? "border-purple-500" : "border-transparent"}`}
+                    style={preset.id === "gradient"
+                      ? { background: `linear-gradient(135deg, ${form.gradientFrom}, ${form.gradientTo})` }
+                      : preset.id === "custom"
+                      ? { background: form.bgColor || "#6366f1" }
+                      : { backgroundColor: preset.bg || "#7c3aed" }
+                    }>
+                    <span className={`absolute inset-0 flex items-end justify-center pb-1.5 text-xs font-medium ${preset.bg === "#ffffff" || preset.bg === "#f9fafb" ? "text-gray-700" : "text-white"}`}>
+                      {preset.label}
                     </span>
-                  )}
-                </button>
-              ))}
+                    {form.theme === preset.id && (
+                      <span className="absolute top-1 right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                        <Check size={9} className="text-white" />
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Background Color */}
+            {form.theme !== "gradient" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">Background Color</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {QUICK_COLORS.map(c => (
+                    <ColorSwatch key={c} color={c} selected={form.bgColor === c} onClick={() => setForm(f => ({ ...f, bgColor: c, theme: "custom" }))} />
+                  ))}
+                </div>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={form.bgColor || "#0f172a"}
+                    onChange={e => setForm(f => ({ ...f, bgColor: e.target.value, theme: "custom" }))}
+                    className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent" />
+                  <input type="text" value={form.bgColor} onChange={e => setForm(f => ({ ...f, bgColor: e.target.value, theme: "custom" }))}
+                    placeholder="#0f172a"
+                    className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500" />
+                </div>
+              </div>
+            )}
+
+            {/* Gradient Colors */}
+            {(form.theme === "gradient" || form.theme === "custom") && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">Gradient Colors</label>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <div className="text-xs text-slate-500 mb-2">From</div>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={form.gradientFrom}
+                        onChange={e => setForm(f => ({ ...f, gradientFrom: e.target.value }))}
+                        className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent" />
+                      <input type="text" value={form.gradientFrom}
+                        onChange={e => setForm(f => ({ ...f, gradientFrom: e.target.value }))}
+                        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs text-slate-500 mb-2">To</div>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={form.gradientTo}
+                        onChange={e => setForm(f => ({ ...f, gradientTo: e.target.value }))}
+                        className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent" />
+                      <input type="text" value={form.gradientTo}
+                        onChange={e => setForm(f => ({ ...f, gradientTo: e.target.value }))}
+                        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+                    </div>
+                  </div>
+                </div>
+                {/* Live preview */}
+                <div className="mt-3 h-12 rounded-xl"
+                  style={{ background: `linear-gradient(135deg, ${form.gradientFrom}, ${form.gradientTo})` }} />
+              </div>
+            )}
+
+            {/* Accent Color */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">Accent / Button Color</label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {QUICK_COLORS.map(c => (
+                  <ColorSwatch key={c} color={c} selected={form.accentColor === c} onClick={() => setForm(f => ({ ...f, accentColor: c }))} />
+                ))}
+              </div>
+              <div className="flex items-center gap-3">
+                <input type="color" value={form.accentColor || "#9333ea"}
+                  onChange={e => setForm(f => ({ ...f, accentColor: e.target.value }))}
+                  className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent" />
+                <input type="text" value={form.accentColor} onChange={e => setForm(f => ({ ...f, accentColor: e.target.value }))}
+                  placeholder="#9333ea"
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500" />
+              </div>
             </div>
           </section>
 
@@ -284,7 +410,7 @@ export default function EditPage() {
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={sections} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
-                  {sections.map(id => <SortableSection key={id} id={id} />)}
+                  {sections.map(sid => <SortableSection key={sid} id={sid} />)}
                 </div>
               </SortableContext>
             </DndContext>
@@ -293,7 +419,7 @@ export default function EditPage() {
           {/* Settings */}
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
             <h2 className="font-semibold text-slate-200 border-b border-slate-800 pb-3">Settings</h2>
-            <Field label="Custom URL Slug" value={form.slug} onChange={set("slug") as any} placeholder="ali-jebai" />
+            <Field label="Custom URL Slug" value={form.slug} onChange={set("slug") as any} placeholder="your-name" />
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium text-sm text-slate-200">Public Profile</div>

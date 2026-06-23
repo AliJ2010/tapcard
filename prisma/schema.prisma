@@ -41,9 +41,14 @@ model Profile {
   twitter     String?
   whatsapp    String?
 
-  theme       String   @default("dark")
-  isPublic    Boolean  @default(true)
-  sectionOrder String  @default("contact,social,links")
+  theme        String   @default("dark")
+  accentColor  String?
+  bgColor      String?
+  gradientFrom String?
+  gradientTo   String?
+  bannerUrl    String?
+  isPublic     Boolean  @default(true)
+  sectionOrder String   @default("contact,social,links")
 
   customLinks CustomLink[]
   taps        Tap[]
