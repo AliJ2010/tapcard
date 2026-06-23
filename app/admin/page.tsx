@@ -34,6 +34,11 @@ export default function AdminPage() {
     setUsers(u => u.filter(x => x.id !== userId));
   }
 
+  async function changePlan(userId: string, plan: string) {
+    await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, plan }) });
+    setUsers(u => u.map(x => x.id === userId ? { ...x, plan } : x));
+  }
+
   if (loading) return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
@@ -87,9 +92,15 @@ export default function AdminPage() {
                     {user.isAdmin && <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded-full">Admin</span>}
                   </td>
                   <td className="px-4 py-4">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${user.plan === "business" ? "bg-amber-500/20 text-amber-400" : user.plan === "pro" ? "bg-purple-500/20 text-purple-400" : "bg-slate-700 text-slate-400"}`}>
-                      {user.plan}
-                    </span>
+                    <select
+                      value={user.plan}
+                      onChange={e => changePlan(user.id, e.target.value)}
+                      className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer focus:outline-none focus:ring-1 focus:ring-purple-500 ${user.plan === "business" ? "bg-amber-500/20 text-amber-400" : user.plan === "pro" ? "bg-purple-500/20 text-purple-400" : "bg-slate-700 text-slate-400"}`}
+                    >
+                      <option value="free">free</option>
+                      <option value="pro">pro</option>
+                      <option value="business">business</option>
+                    </select>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-400">
                     {user.profiles.map(p => (
