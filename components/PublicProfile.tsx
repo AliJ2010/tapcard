@@ -57,7 +57,7 @@ function buildTheme(profile: Profile): ThemeVars {
     const gTo = gradientTo || "#db2777";
     const accent = accentColor || "#a855f7";
     return {
-      bgStyle: { background: "linear-gradient(to bottom, #1e1b4b, #4a044e)" },
+      bgStyle: { background: `linear-gradient(to bottom, ${gFrom}, ${gTo})` },
       bannerStyle: { background: `linear-gradient(135deg, ${gFrom}, ${gTo})` },
       cardStyle: { backgroundColor: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)" },
       borderStyle: { borderColor: "rgba(255,255,255,0.2)" },
