@@ -35,7 +35,7 @@ type ThemeVars = {
   bannerStyle: React.CSSProperties;
   cardStyle: React.CSSProperties;
   borderStyle: React.CSSProperties;
-  accentStyle: React.CSSProperties;
+  accentStyle: React.CSSProperties; accentText: string;
   text: string;
   sub: string;
 };
@@ -61,7 +61,7 @@ function buildTheme(profile: Profile): ThemeVars {
       bannerStyle: { background: `linear-gradient(135deg, ${gFrom}, ${gTo})` },
       cardStyle: { backgroundColor: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)" },
       borderStyle: { borderColor: "rgba(255,255,255,0.2)" },
-      accentStyle: { backgroundColor: accent },
+      accentStyle: { backgroundColor: accent }, accentText: isLight(accent) ? "text-gray-900" : "text-white",
       text: "text-white",
       sub: "text-purple-200",
     };
@@ -74,7 +74,7 @@ function buildTheme(profile: Profile): ThemeVars {
       bannerStyle: { background: "linear-gradient(135deg, #818cf8, #38bdf8)" },
       cardStyle: { backgroundColor: "#ffffff" },
       borderStyle: { borderColor: "#e5e7eb" },
-      accentStyle: { backgroundColor: accent },
+      accentStyle: { backgroundColor: accent }, accentText: isLight(accent) ? "text-gray-900" : "text-white",
       text: "text-gray-900",
       sub: "text-gray-500",
     };
@@ -87,7 +87,7 @@ function buildTheme(profile: Profile): ThemeVars {
       bannerStyle: { backgroundColor: "#111827" },
       cardStyle: { backgroundColor: "#f9fafb" },
       borderStyle: { borderColor: "#f3f4f6" },
-      accentStyle: { backgroundColor: accent },
+      accentStyle: { backgroundColor: accent }, accentText: isLight(accent) ? "text-gray-900" : "text-white",
       text: "text-gray-900",
       sub: "text-gray-400",
     };
@@ -104,7 +104,7 @@ function buildTheme(profile: Profile): ThemeVars {
       bannerStyle: { background: `linear-gradient(135deg, ${gFrom}, ${gTo})` },
       cardStyle: { backgroundColor: light ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)" },
       borderStyle: { borderColor: light ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)" },
-      accentStyle: { backgroundColor: accent },
+      accentStyle: { backgroundColor: accent }, accentText: isLight(accent) ? "text-gray-900" : "text-white",
       text: light ? "text-gray-900" : "text-white",
       sub: light ? "text-gray-500" : "text-slate-400",
     };
@@ -117,7 +117,7 @@ function buildTheme(profile: Profile): ThemeVars {
     bannerStyle: { background: "linear-gradient(135deg, #6d28d9, #9333ea, #db2777)" },
     cardStyle: { backgroundColor: "#0f172a" },
     borderStyle: { borderColor: "#1e293b" },
-    accentStyle: { backgroundColor: accent },
+    accentStyle: { backgroundColor: accent }, accentText: isLight(accent) ? "text-gray-900" : "text-white",
     text: "text-white",
     sub: "text-slate-400",
   };
@@ -239,7 +239,7 @@ export default function PublicProfile({ profile, vcard }: { profile: Profile; vc
           {profile.photoUrl ? (
             <img src={profile.photoUrl} alt={profile.fullName} className="w-28 h-28 rounded-full border-4 object-cover shadow-xl" style={{ borderColor: "rgba(0,0,0,0.5)" }} />
           ) : (
-            <div className="w-28 h-28 rounded-full border-4 flex items-center justify-center text-4xl font-bold text-white shadow-xl" style={{ ...t.accentStyle, borderColor: "rgba(0,0,0,0.5)" }}>
+            <div className="w-28 h-28 rounded-full border-4 flex items-center justify-center text-4xl font-bold shadow-xl" style={{ color: isLight(profile.accentColor || "#9333ea") ? "#111827" : "#ffffff", ...t.accentStyle, borderColor: "rgba(0,0,0,0.5)" }}>
               {profile.fullName.charAt(0)}
             </div>
           )}
@@ -250,7 +250,7 @@ export default function PublicProfile({ profile, vcard }: { profile: Profile; vc
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <button onClick={downloadVCard} className="flex items-center justify-center gap-2 py-3 hover:opacity-90 rounded-xl font-semibold text-white text-sm transition-opacity" style={t.accentStyle}>
+          <button onClick={downloadVCard} className={`flex items-center justify-center gap-2 py-3 hover:opacity-90 rounded-xl font-semibold text-sm transition-opacity ${t.accentText}`} style={t.accentStyle}>
             <Download size={16} /> Save Contact
           </button>
           <button onClick={share} className={`flex items-center justify-center gap-2 py-3 border hover:opacity-80 rounded-xl font-semibold ${t.text} text-sm transition-opacity`} style={{ ...t.cardStyle, ...t.borderStyle }}>
